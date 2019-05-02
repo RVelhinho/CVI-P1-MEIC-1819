@@ -4,13 +4,9 @@ clear all, close all
 %img = imread(name{1});
 
 img = imread('Moedas1.jpg');
-imshow(img);
-
 img_gauss = imgaussfilt(img, 3);
 
-figure, imshow(img_gauss(:,:,1));
 binary = imbinarize(img_gauss(:,:,1),0.50);
-figure, imshow(binary);
 
 se = strel('disk', 2);
 i1 = imdilate(binary,se);
@@ -33,10 +29,6 @@ stats = regionprops('table', lb, 'Area', 'Centroid', 'Perimeter', ...
 
 area = stats.Area;
 diam = mean([stats.MinorAxisLength stats.MajorAxisLength], 2);
-
-figure;
-imshow(imgFinal);title('Image Treatment');
-
 
 centers = stats.Centroid;
 diameters = mean([stats.MajorAxisLength stats.MinorAxisLength],2);
@@ -127,7 +119,8 @@ while opt == 0
         title('Centroid [x,y]', 'FontSize', 14);
         txt1 = strcat('\leftarrow','[',int2str(centroids(:,1)), '; ', int2str(centroids(:,2)), ']');
         text(centroids(:,1),centroids(:,2), txt1,'Color','black','FontSize',8)
-        text(50,700,strcat('Number of Coins ',' :',{' '} ,int2str(num)),'Color','white','FontSize',12)
+        plot(centroids(:,1),centroids(:,2), '.r');
+        text(50,700,strcat('Number of Objects ',' :',{' '} ,int2str(num)),'Color','white','FontSize',12)
 
         subplot(2,2,2)
         title('Area', 'FontSize', 14);
