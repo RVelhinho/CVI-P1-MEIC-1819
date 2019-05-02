@@ -3,7 +3,7 @@ clear all, close all
 %name = inputdlg('Choose your image:');
 %img = imread(name{1});
 
-img = imread('Moedas4.jpg');
+img = imread('Moedas3.jpg');
 img_gauss = imgaussfilt(img, 3);
 
 binary = imbinarize(img_gauss(:,:,1),0.50);
@@ -58,6 +58,23 @@ while opt == 0
             opt = 1;
             delete(gcf)
             close all
+    end
+    
+    if aux == 2 && opt == 0
+        
+             % Construct a questdlg with three options
+        choice = questdlg('Choose your option', ...
+            'Image', ...
+            'Histogram','Ordered Area/Perimeter','Back','Back');
+        % Handle response
+        switch choice
+            case 'Histogram'
+                aux = 3;
+            case 'Ordered Area/Perimeter'
+                aux = 1;
+            case 'Back'
+                delete(gcf)
+        end
     end
     
     if aux == 0 && opt == 0
@@ -229,6 +246,113 @@ while opt == 0
             end   
         end
 
+
+    end
+    
+    if aux == 1 && opt == 0
+
+        % Construct a questdlg with three options
+            choice = questdlg('Area', ...
+                'Image', ...
+                'Ascend','Descend','Descend');
+            % Handle response
+            switch choice
+                case 'Ascend'
+                    stats = sortrows(stats,'Area','ascend');
+                case 'Descend'
+                    stats = sortrows(stats,'Area','descend');
+            end
+
+            centroids = cat(1, stats.Centroid);
+
+            maxrad = max(diameters)/2;
+
+            figure; subplot(2,num,1)
+            set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+        for i = 1:num
+
+            % Get the x and y corner coordinates as integers
+            sp(1) = floor(centroids(i,1)-maxrad-10); %xmin
+            sp(2) = floor(centroids(i,2)-maxrad-10); %ymin
+            sp(3) = ceil(centroids(i,1)+maxrad+10);   %xmax
+            sp(4) = ceil(centroids(i,2)+maxrad+10);   %ymax
+            
+            [rows, columns, colors] = size(img);
+            
+            if sp(1) < 0
+                sp(1) = 1;
+            end
+            
+            if sp(2) < 0
+                sp(2) = 1;
+            end
+            
+            if sp(3) > columns
+                sp(3) = columns;
+            end
+            
+            if sp(4) > rows
+                sp(4) = rows;
+            end
+            
+            
+            
+            disp(sp(1));
+            disp(sp(2));
+            disp(sp(3));
+            disp(sp(4));
+
+            % Index into the original image to create the new image
+            MM = img(sp(2):sp(4), sp(1): sp(3),:);
+
+            subplot(2,num,i), subimage(MM)
+            axis off
+            title(strcat('Area', ':' ,int2str(ceil(stats.Area(i)))), 'FontSize', 12);
+
+        end
+           
+
+        for i = 1:num
+
+            % Get the x and y corner coordinates as integers
+            sp(1) = floor(centroids(i,1)-maxrad-10); %xmin
+            sp(2) = floor(centroids(i,2)-maxrad-10); %ymin
+            sp(3) = ceil(centroids(i,1)+maxrad+10);   %xmax
+            sp(4) = ceil(centroids(i,2)+maxrad+10);   %ymax
+            
+            if sp(1) < 0
+                sp(1) = 1;
+            end
+            
+            if sp(2) < 0
+                sp(2) = 1;
+            end
+            
+            if sp(3) > columns
+                sp(3) = columns;
+            end
+            
+            if sp(4) > rows
+                sp(4) = rows;
+            end
+
+            % Index into the original image to create the new image
+            MM = img(sp(2):sp(4), sp(1): sp(3),:);
+            subplot(2,num,num+i), subimage(MM)
+            axis off
+            
+            title(strcat('Perimeter', ':' ,int2str(ceil(stats.Perimeter(i)))), 'FontSize', 12);
+        end
+        
+        % Construct a questdlg with three options
+            choice = questdlg('Close', ...
+                'Image', ...
+                'Close','Close');
+            % Handle response
+            switch choice
+                case 'Close'
+                    delete(gcf)
+            end
 
     end
 end
