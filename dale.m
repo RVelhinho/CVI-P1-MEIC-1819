@@ -3,7 +3,7 @@ clear all, close all
 %name = inputdlg('Choose your image:');
 %img = imread(name{1});
 
-img = imread('Moedas1.jpg');
+img = imread('Moedas4.jpg');
 img_gauss = imgaussfilt(img, 3);
 
 binary = imbinarize(img_gauss(:,:,1),0.50);
@@ -133,13 +133,13 @@ while opt == 0
         text(centroids(:,1),centroids(:,2)-(1.5*radii), txt3,'Color','white','FontSize',8)
 
         subplot(2,2,4)
-        title('Connections', 'FontSize', 14);
+        title('Relative distances', 'FontSize', 14);
         auxSelect = 0;
     
         while auxSelect == 0
 
             % Construct a questdlg with three options
-            choice = questdlg('Select Coin?', ...
+            choice = questdlg('Do you want to select an object to check the distances?', ...
                 'Image', ...
                 'Select','Close','Close');
             % Handle response
@@ -148,8 +148,6 @@ while opt == 0
                     auxSelect = 0;
                 case 'Close'
                     auxSelect = 1;
-                    delete(gcf)
-                    close all
             end
 
             if auxSelect == 0
@@ -192,8 +190,10 @@ while opt == 0
 
                     subplot(2,2,4),imshow(img)
                     hold on
-                    text(50,50,'Connections','Color','white','FontSize',14)
-                    viscircles(centers,radii);
+                    for k = 1:length(bound)
+                        boundary = bound{k};
+                        plot(boundary(:,2), boundary(:,1), 'r', 'LineWidth', 2)
+                    end
                     plot(imgca,centroids(:,1), centroids(:,2), 'r.')
                     plot(xpoints',ypoints', 'color', [1 0 0], 'linewidth', 2);
 
