@@ -3,7 +3,7 @@ clear all, close all
 %name = inputdlg('Choose your image:');
 %img = imread(name{1});
 
-img = imread('Moedas3.jpg');
+img = imread('Moedas1.jpg');
 img_gauss = imgaussfilt(img, 3);
 
 binary = imbinarize(img_gauss(:,:,1),0.50);
@@ -26,6 +26,12 @@ imgFinal(WS2 == 0) = 0;
 [lb, num] = bwlabel(imgFinal);
 stats = regionprops('table', lb, 'Area', 'Centroid', 'Perimeter', ...
     'MajorAxisLength','MinorAxisLength', 'BoundingBox');
+
+allPerimeters = [stats.Perimeter];
+allAreas = [stats.Area];
+allCircularities = allPerimeters  .^ 2 ./ (4 * pi* allAreas);
+
+stats.Circularity = stats.Perimeter .^ 2 ./ (4 * pi* stats.Area);
 
 area = stats.Area;
 diam = mean([stats.MinorAxisLength stats.MajorAxisLength], 2);
@@ -65,10 +71,10 @@ while opt == 0
              % Construct a questdlg with three options
         choice = questdlg('Choose your option', ...
             'Image', ...
-            'Histogram','Ordered Area/Perimeter','Back','Back');
+            'Ordered Circularity/Sharpness','Ordered Area/Perimeter','Back','Back');
         % Handle response
         switch choice
-            case 'Histogram'
+            case 'Ordered Circularity/Sharpness'
                 aux = 3;
             case 'Ordered Area/Perimeter'
                 aux = 1;
@@ -249,6 +255,131 @@ while opt == 0
 
     end
     
+% -------------------------------------------------------------------------
+%   Circularity & Sharpness
+% -------------------------------------------------------------------------
+    
+    if aux == 3 && opt == 0
+        
+        % Construct a questdlg with three options
+            choice = questdlg('Area', ...
+                'Image', ...
+                'Ascend','Descend','Descend');
+            % Handle response
+            switch choice
+                case 'Ascend'
+                    stats1 = stats;
+                    stats = sortrows(stats, 'Circularity','ascend');
+                   % stats1 = sortrows(stats1, 'Sharpness', 'ascend');
+                case 'Descend'
+                    stats1 = stats;
+                    stats = sortrows(stats,'Circularity','descend');
+                   % stats1 = sortrows(stats1, 'Sharpness', 'descend');
+            end
+
+            centroids = cat(1, stats.Centroid);
+            centroids1 = cat(1, stats1.Centroid);
+            
+            maxrad = max(diameters)/2;
+
+            figure; subplot(2,num,1)
+            set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+        for i = 1:num
+
+            % Get the x and y corner coordinates as integers
+            sp(1) = floor(centroids(i,1)-maxrad-10); %xmin
+            sp(2) = floor(centroids(i,2)-maxrad-10); %ymin
+            sp(3) = ceil(centroids(i,1)+maxrad+10);   %xmax
+            sp(4) = ceil(centroids(i,2)+maxrad+10);   %ymax
+            
+            [rows, columns, colors] = size(img);
+            
+            if sp(1) < 0
+                sp(1) = 1;
+            end
+            
+            if sp(2) < 0
+                sp(2) = 1;
+            end
+            
+            if sp(3) > columns
+                sp(3) = columns;
+            end
+            
+            if sp(4) > rows
+                sp(4) = rows;
+            end
+            
+            
+            
+            disp(sp(1));
+            disp(sp(2));
+            disp(sp(3));
+            disp(sp(4));
+
+            % Index into the original image to create the new image
+            MM = img(sp(2):sp(4), sp(1): sp(3),:);
+
+            subplot(2,num,i), subimage(MM)
+            axis off
+            title(strcat('Circularity', ':' ,int2str(stats.Circularity(i))), 'FontSize', 12);
+
+        end
+           
+
+        for i = 1:num
+
+            % Get the x and y corner coordinates as integers
+            sp(1) = floor(centroids1(i,1)-maxrad-10); %xmin
+            sp(2) = floor(centroids1(i,2)-maxrad-10); %ymin
+            sp(3) = ceil(centroids1(i,1)+maxrad+10);   %xmax
+            sp(4) = ceil(centroids1(i,2)+maxrad+10);   %ymax
+            
+            if sp(1) < 0
+                sp(1) = 1;
+            end
+            
+            if sp(2) < 0
+                sp(2) = 1;
+            end
+            
+            if sp(3) > columns
+                sp(3) = columns;
+            end
+            
+            if sp(4) > rows
+                sp(4) = rows;
+            end
+
+            % Index into the original image to create the new image
+            MM = img(sp(2):sp(4), sp(1): sp(3),:);
+            subplot(2,num,num+i), subimage(MM)
+            axis off
+            
+            title(strcat('Perimeter', ':' ,int2str(ceil(stats1.Perimeter(i)))), 'FontSize', 12);
+        end
+      
+        
+       
+     %  subplot (1,2,1), plot(imgca,stat.Area, centroids(:,2))
+        
+        % Construct a questdlg with three options
+            choice = questdlg('Close', ...
+                'Image', ...
+                'Close','Close');
+            % Handle response
+            switch choice
+                case 'Close'
+                    delete(gcf)
+            end
+     
+    end
+    
+    
+    
+% -------------------------------------------------------------------------
+%   Area & Perimeter
+% -------------------------------------------------------------------------
     if aux == 1 && opt == 0
 
         % Construct a questdlg with three options
@@ -258,13 +389,18 @@ while opt == 0
             % Handle response
             switch choice
                 case 'Ascend'
+                    stats1 = stats;
                     stats = sortrows(stats,'Area','ascend');
+                    stats1 = sortrows(stats1, 'Perimeter', 'ascend');
                 case 'Descend'
+                    stats1 = stats;
                     stats = sortrows(stats,'Area','descend');
+                    stats1 = sortrows(stats1, 'Perimeter', 'descend');
             end
 
             centroids = cat(1, stats.Centroid);
-
+            centroids1 = cat(1, stats1.Centroid);
+            
             maxrad = max(diameters)/2;
 
             figure; subplot(2,num,1)
@@ -315,10 +451,10 @@ while opt == 0
         for i = 1:num
 
             % Get the x and y corner coordinates as integers
-            sp(1) = floor(centroids(i,1)-maxrad-10); %xmin
-            sp(2) = floor(centroids(i,2)-maxrad-10); %ymin
-            sp(3) = ceil(centroids(i,1)+maxrad+10);   %xmax
-            sp(4) = ceil(centroids(i,2)+maxrad+10);   %ymax
+            sp(1) = floor(centroids1(i,1)-maxrad-10); %xmin
+            sp(2) = floor(centroids1(i,2)-maxrad-10); %ymin
+            sp(3) = ceil(centroids1(i,1)+maxrad+10);   %xmax
+            sp(4) = ceil(centroids1(i,2)+maxrad+10);   %ymax
             
             if sp(1) < 0
                 sp(1) = 1;
@@ -341,7 +477,7 @@ while opt == 0
             subplot(2,num,num+i), subimage(MM)
             axis off
             
-            title(strcat('Perimeter', ':' ,int2str(ceil(stats.Perimeter(i)))), 'FontSize', 12);
+            title(strcat('Perimeter', ':' ,int2str(ceil(stats1.Perimeter(i)))), 'FontSize', 12);
         end
         
         % Construct a questdlg with three options
