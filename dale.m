@@ -619,18 +619,23 @@ while opt == 0
         perimeterSimilarity = stats.Perimeter.';
         circularitySimilarity = stats.Circularity.';
         sharpnessSimilarity = stats.Sharpness.';
-        
+     
+        tempArea = [];
+        tempPerimeter = [];
+        tempCircularity = [];
+        tempSharpness = [];
         for j = 1:num
-            areaSimilarity(j) = abs(areaSimilarity(similarityIndex) - areaSimilarity(j));
-            perimeterSimilarity(j) = abs(perimeterSimilarity(similarityIndex) - perimeterSimilarity(j));
-            circularitySimilarity(j) = abs(circularitySimilarity(similarityIndex) - circularitySimilarity(j));
-            sharpnessSimilarity(j) = abs(sharpnessSimilarity(similarityIndex) - sharpnessSimilarity(j));
+            tempArea = [tempArea abs(areaSimilarity(similarityIndex) - areaSimilarity(j))];
+            tempPerimeter = [tempPerimeter abs(perimeterSimilarity(similarityIndex) - perimeterSimilarity(j))];
+            tempCircularity = [tempCircularity abs(circularitySimilarity(similarityIndex) - circularitySimilarity(j))];
+            tempSharpness = [tempSharpness abs(sharpnessSimilarity(similarityIndex) - sharpnessSimilarity(j))];
         end
         
-        stats.areaSimilarity = areaSimilarity.';
-        stats.perimeterSimilarity = perimeterSimilarity.';
-        stats.circularitySimilarity = circularitySimilarity.';
-        stats.sharpnessSimilarity = sharpnessSimilarity.';
+        
+        stats.areaSimilarity = tempArea.';
+        stats.perimeterSimilarity = tempPerimeter.';
+        stats.circularitySimilarity = tempCircularity.';
+        stats.sharpnessSimilarity = tempSharpness.';
         
         statsArea = sortrows(stats,'areaSimilarity','ascend');
         statsPerimeter = sortrows(stats,'perimeterSimilarity','ascend');
@@ -644,8 +649,26 @@ while opt == 0
         centroidsSharpness = cat(1, statsSharpness.Centroid);
             
         maxrad = max(diameters)/2;
-
-        figure; subplot(2,num,1)
+        
+             % Construct a questdlg with three options
+        choice = questdlg('Choose your option', ...
+            'Image', ...
+            'Similar Area/Perimeter','Similar Circularity/Sharpness','Back','Back');
+        % Handle response
+        switch choice
+            case 'Similar Area/Perimeter'
+                aux = 7;
+            case 'Similar Circularity/Sharpness'
+                aux = 8;
+            case 'Back'
+                delete(gcf)
+        end
+    end
+    
+    
+    
+    if aux == 7 && opt == 0
+        figure; subplot(2,num,1);
         set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
         for i = 1:num
 
@@ -654,27 +677,27 @@ while opt == 0
             sp(2) = floor(centroidsArea(i,2)-maxrad-10); %ymin
             sp(3) = ceil(centroidsArea(i,1)+maxrad+10);   %xmax
             sp(4) = ceil(centroidsArea(i,2)+maxrad+10);   %ymax
-            
+
             [rows, columns, colors] = size(img);
-            
+
             if sp(1) < 0
                 sp(1) = 1;
             end
-            
+
             if sp(2) < 0
                 sp(2) = 1;
             end
-            
+
             if sp(3) > columns
                 sp(3) = columns;
             end
-            
+
             if sp(4) > rows
                 sp(4) = rows;
             end
-            
-            
-            
+
+
+
             disp(sp(1));
             disp(sp(2));
             disp(sp(3));
@@ -685,11 +708,123 @@ while opt == 0
 
             subplot(2,num,i), subimage(MM)
             axis off
-            title(strcat('Area Similarity', ': ',{' '}, int2str(statsArea.areaSimilarity(i))), 'FontSize', 12);
+            title(strcat('Area Difference', ': ',{' '}, num2str(statsArea.areaSimilarity(i))), 'FontSize', 12);
 
         end
-           
+
+        for i = 1:num
+
+            % Get the x and y corner coordinates as integers
+            sp(1) = floor(centroidsPerimeter(i,1)-maxrad-10); %xmin
+            sp(2) = floor(centroidsPerimeter(i,2)-maxrad-10); %ymin
+            sp(3) = ceil(centroidsPerimeter(i,1)+maxrad+10);   %xmax
+            sp(4) = ceil(centroidsPerimeter(i,2)+maxrad+10);   %ymax
+
+            if sp(1) < 0
+                sp(1) = 1;
+            end
+
+            if sp(2) < 0
+                sp(2) = 1;
+            end
+
+            if sp(3) > columns
+                sp(3) = columns;
+            end
+
+            if sp(4) > rows
+                sp(4) = rows;
+            end
+
+            % Index into the original image to create the new image
+            MM = img(sp(2):sp(4), sp(1): sp(3),:);
+            subplot(2,num,num+i), subimage(MM)
+            axis off
+
+            title(strcat('Perimeter Difference', ': ' , {' '}, num2str(statsPerimeter.perimeterSimilarity(i))), 'FontSize', 12);
+        end
+
     end
+    
+    
+    if aux == 8 && opt == 0
+        figure; subplot(2,num,1);
+        set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+        for i = 1:num
+
+            % Get the x and y corner coordinates as integers
+            sp(1) = floor(centroidsCircularity(i,1)-maxrad-10); %xmin
+            sp(2) = floor(centroidsCircularity(i,2)-maxrad-10); %ymin
+            sp(3) = ceil(centroidsCircularity(i,1)+maxrad+10);   %xmax
+            sp(4) = ceil(centroidsCircularity(i,2)+maxrad+10);   %ymax
+
+            [rows, columns, colors] = size(img);
+
+            if sp(1) < 0
+                sp(1) = 1;
+            end
+
+            if sp(2) < 0
+                sp(2) = 1;
+            end
+
+            if sp(3) > columns
+                sp(3) = columns;
+            end
+
+            if sp(4) > rows
+                sp(4) = rows;
+            end
+
+
+
+            disp(sp(1));
+            disp(sp(2));
+            disp(sp(3));
+            disp(sp(4));
+
+            % Index into the original image to create the new image
+            MM = img(sp(2):sp(4), sp(1): sp(3),:);
+
+            subplot(2,num,i), subimage(MM)
+            axis off
+            title(strcat('Circularity Difference', ': ',{' '}, num2str(statsCircularity.circularitySimilarity(i))), 'FontSize', 12);
+
+        end
+
+        for i = 1:num
+
+            % Get the x and y corner coordinates as integers
+            sp(1) = floor(centroidsSharpness(i,1)-maxrad-10); %xmin
+            sp(2) = floor(centroidsSharpness(i,2)-maxrad-10); %ymin
+            sp(3) = ceil(centroidsSharpness(i,1)+maxrad+10);   %xmax
+            sp(4) = ceil(centroidsSharpness(i,2)+maxrad+10);   %ymax
+
+            if sp(1) < 0
+                sp(1) = 1;
+            end
+
+            if sp(2) < 0
+                sp(2) = 1;
+            end
+
+            if sp(3) > columns
+                sp(3) = columns;
+            end
+
+            if sp(4) > rows
+                sp(4) = rows;
+            end
+
+            % Index into the original image to create the new image
+            MM = img(sp(2):sp(4), sp(1): sp(3),:);
+            subplot(2,num,num+i), subimage(MM)
+            axis off
+
+            title(strcat('Sharpness Difference', ': ' , {' '}, num2str(statsSharpness.sharpnessSimilarity(i))), 'FontSize', 12);
+        end
+    end
+    
 end
 
 
