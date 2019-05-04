@@ -24,23 +24,56 @@ imgFinal = i1;
 imgFinal(WS2 == 0) = 0;
 
 [lb, num] = bwlabel(imgFinal);
+
 stats = regionprops('table', lb, 'Area', 'Centroid', 'Perimeter', ...
     'MajorAxisLength','MinorAxisLength', 'BoundingBox');
 
-allPerimeters = [stats.Perimeter];
-allAreas = [stats.Area];
-allCircularities = allPerimeters  .^ 2 ./ (4 * pi* allAreas);
+
+coinPerimeters = [376.444, 436.188, 452.1, 481.716, 503.326, 528.724, 552.426];
+coinDiameters = [120.7976, 139.7443, 144.9026, 154.2051, 160.98, 169.2232, 176.6122];
+coinValues = [0.01, 0.02, 0.10, 0.05, 0.20, 1.00, 0.50];
+error = 4;
 
 stats.Circularity = stats.Perimeter .^ 2 ./ (4 * pi* stats.Area);
+
+perimeters = stats.Perimeter.';
+
+circularity = stats.Circularity.';
+
 
 area = stats.Area;
 diam = mean([stats.MinorAxisLength stats.MajorAxisLength], 2);
 
 centers = stats.Centroid;
 diameters = mean([stats.MajorAxisLength stats.MinorAxisLength],2);
+
+coinDiameters2 = diameters.';
 radii = diameters/2;
 
 centroids = cat(1, stats.Centroid);
+
+
+sumMoney = 0;
+valueIndex = 0;
+
+
+index = 1;
+for v = 1:length(coinDiameters2)
+    if (circularity(v) < 1.01)
+        for l = 1:length(coinDiameters)
+            if (coinDiameters2(v) < coinDiameters(l) + error) && (coinDiameters2(v) > coinDiameters(l) - error)
+                index = l;
+            end
+        end
+        
+        disp(coinValues(index)); 
+        sumMoney = sumMoney + coinValues(index);
+    end
+    
+  
+  
+end
+
 
 x=[centroids(:,1)]
 y=[centroids(:,2)]
@@ -144,6 +177,7 @@ while opt == 0
         text(centroids(:,1),centroids(:,2), txt1,'Color','black','FontSize',8)
         plot(centroids(:,1),centroids(:,2), '.r');
         text(50,700,strcat('Number of Objects ',' :',{' '} ,int2str(num)),'Color','white','FontSize',12)
+        text(50,660,strcat('Euro Value ',' :',{' '} ,num2str(sumMoney)),'Color','white','FontSize',12)
 
         subplot(2,2,2)
         title('Area', 'FontSize', 14);
