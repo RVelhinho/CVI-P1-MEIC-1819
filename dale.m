@@ -743,6 +743,17 @@ while opt == 0
 
             title(strcat('Perimeter Difference', ': ' , {' '}, num2str(statsPerimeter.perimeterSimilarity(i))), 'FontSize', 12);
         end
+        
+        % Construct a questdlg with three options
+            choice = questdlg('Close', ...
+                'Image', ...
+                'Close','Close');
+            % Handle response
+            switch choice
+                case 'Close'
+                    delete(gcf)
+                    close all
+            end
 
     end
     
@@ -823,6 +834,17 @@ while opt == 0
 
             title(strcat('Sharpness Difference', ': ' , {' '}, num2str(statsSharpness.sharpnessSimilarity(i))), 'FontSize', 12);
         end
+        
+        % Construct a questdlg with three options
+            choice = questdlg('Close', ...
+                'Image', ...
+                'Close','Close');
+            % Handle response
+            switch choice
+                case 'Close'
+                    delete(gcf)
+                    close all
+            end
     end
     
 end
