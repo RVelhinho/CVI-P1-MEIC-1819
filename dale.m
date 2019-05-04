@@ -75,11 +75,32 @@ for v = 1:length(coinDiameters2)
 end
 
 
+
+
 x=[centroids(:,1)]
 y=[centroids(:,2)]
 
 opt = 0;
 aux = 0;
+
+bound = bwboundaries(imgFinal,'holes');
+
+
+coinSharp = [];
+for k = 1:num
+    boundary = bound{k};
+    delta_sq = diff(boundary).^2;    
+    perimeter = sum(sqrt(sum(delta_sq,2)));
+    area = stats.Area(k);
+    metric = 4*pi*area/perimeter^2;
+    sharpness = 1 - metric;
+    metric_string = sprintf('%2.2f',sharpness);
+
+        coinSharp = [coinSharp sharpness];
+
+end
+
+stats.Sharpness = coinSharp.';
 
 
 while opt == 0
@@ -121,7 +142,7 @@ while opt == 0
         set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
         
         %Draw object boundaries  
-        bound = bwboundaries(imgFinal,'holes');
+        
         subplot(2,2,1),imshow(img);
         hold on
         for k = 1:length(bound)
@@ -296,7 +317,7 @@ while opt == 0
     if aux == 3 && opt == 0
         
         % Construct a questdlg with three options
-            choice = questdlg('Area', ...
+            choice = questdlg('Ascending or descending?', ...
                 'Image', ...
                 'Ascend','Descend','Descend');
             % Handle response
@@ -304,11 +325,11 @@ while opt == 0
                 case 'Ascend'
                     stats1 = stats;
                     stats = sortrows(stats, 'Circularity','ascend');
-                   % stats1 = sortrows(stats1, 'Sharpness', 'ascend');
+                    stats1 = sortrows(stats1, 'Sharpness', 'ascend');
                 case 'Descend'
                     stats1 = stats;
                     stats = sortrows(stats,'Circularity','descend');
-                   % stats1 = sortrows(stats1, 'Sharpness', 'descend');
+                    stats1 = sortrows(stats1, 'Sharpness', 'descend');
             end
 
             centroids = cat(1, stats.Centroid);
@@ -356,7 +377,7 @@ while opt == 0
 
             subplot(2,num,i), subimage(MM)
             axis off
-            title(strcat('Circularity', ':' ,int2str(stats.Circularity(i))), 'FontSize', 12);
+            title(strcat('Circularity', ': ' , {' '}, num2str(stats.Circularity(i))), 'FontSize', 12);
 
         end
            
@@ -390,7 +411,7 @@ while opt == 0
             subplot(2,num,num+i), subimage(MM)
             axis off
             
-            title(strcat('Perimeter', ':' ,int2str(ceil(stats1.Perimeter(i)))), 'FontSize', 12);
+            title(strcat('Sharpness', ': ' , {' '}, num2str(stats1.Sharpness(i))), 'FontSize', 12);
         end
       
         
@@ -417,7 +438,7 @@ while opt == 0
     if aux == 1 && opt == 0
 
         % Construct a questdlg with three options
-            choice = questdlg('Area', ...
+            choice = questdlg('Ascending or descending?', ...
                 'Image', ...
                 'Ascend','Descend','Descend');
             % Handle response
@@ -477,7 +498,7 @@ while opt == 0
 
             subplot(2,num,i), subimage(MM)
             axis off
-            title(strcat('Area', ':' ,int2str(ceil(stats.Area(i)))), 'FontSize', 12);
+            title(strcat('Area', ': ',{' '}, int2str(ceil(stats.Area(i)))), 'FontSize', 12);
 
         end
            
@@ -511,7 +532,7 @@ while opt == 0
             subplot(2,num,num+i), subimage(MM)
             axis off
             
-            title(strcat('Perimeter', ':' ,int2str(ceil(stats1.Perimeter(i)))), 'FontSize', 12);
+            title(strcat('Perimeter', ': ' , {' '}, int2str(ceil(stats1.Perimeter(i)))), 'FontSize', 12);
         end
         
         % Construct a questdlg with three options
