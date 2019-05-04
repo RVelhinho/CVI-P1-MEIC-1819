@@ -113,11 +113,26 @@ while opt == 0
         case 'Visualization'
             aux = 0;
         case 'More Options'
-            aux = 2;
+            aux = 4;
         case 'Exit'
             opt = 1;
             delete(gcf)
             close all
+    end
+    
+    if aux == 4 && opt == 0
+        choice = questdlg('Choose your option', ...
+            'Image', ...
+            'Orders','Similarity','Back','Back');
+        % Handle response
+        switch choice
+            case 'Orders'
+                aux = 2;
+            case 'Similarity'
+                aux = 5;
+            case 'Back'
+                delete(gcf)
+        end
     end
     
     if aux == 2 && opt == 0
@@ -237,17 +252,17 @@ while opt == 0
                 for i = 1:num
                     output = (xp - centers(i,1))^2 + (yp - centers(i,2))^2 <= radii(i)^2;
                     if output == 1
-                        moedax = centers(i,1);
-                        moeday = centers(i,2);
+                        objectx = centers(i,1);
+                        objecty = centers(i,2);
                         break
                     else
-                        res = 'O ponto que indicou n?o pertence a nenhuma moeda';
-                        moedax = 0;    
+                        res = 'That point does not belong to any object';
+                        objectx = 0;    
                     end
                 end
 
-                if moedax ~= 0
-                    point=[moedax,moeday];
+                if objectx ~= 0
+                    point=[objectx,objecty];
                     xpoints = [];
                     for idx = 1:numel(x)
                         element = x(idx)
@@ -545,6 +560,135 @@ while opt == 0
                     delete(gcf)
             end
 
+    end
+    
+% -------------------------------------------------------------------------
+%   Similarity
+% -------------------------------------------------------------------------
+
+    if aux == 5 && opt == 0
+        figure, imshow(img);
+        p = ginput(1);
+        xp = [p(:,1)];
+        yp = [p(:,2)];
+        for i = 1:num
+            output = (xp - centers(i,1))^2 + (yp - centers(i,2))^2 <= radii(i)^2;
+            if output == 1
+                objectx = centers(i,1);
+                objecty = centers(i,2);
+                break
+            else
+                res = 'That point does not belong to any object';
+                objectx = 0;    
+            end
+        end
+        disp('Dab');
+        disp(objectx);
+
+        if objectx ~= 0
+            point=[objectx,objecty];
+            xpoints = [];
+            for idx = 1:numel(x)
+                element = x(idx)
+                result = [point(1,1) element];
+                xpoints = cat(1, xpoints, result);
+            end
+            disp(xpoints);
+
+            ypoints = [];
+            for idy = 1:numel(y)
+                element = y(idy)
+                result = [point(1,2) element];
+                ypoints = cat(1, ypoints, result);
+            end
+            
+        else
+            res;
+        end
+        
+        centroidArray = stats.Centroid.';
+        similarityIndex = 1;
+        
+        for p = 1:num
+            if point(1) == centroidArray(1, p) && point(2) == centroidArray(2, p)
+                similarityIndex = p;
+            end
+        end
+        
+        areaSimilarity = stats.Area.';
+        perimeterSimilarity = stats.Perimeter.';
+        circularitySimilarity = stats.Circularity.';
+        sharpnessSimilarity = stats.Sharpness.';
+        
+        for j = 1:num
+            areaSimilarity(j) = abs(areaSimilarity(similarityIndex) - areaSimilarity(j));
+            perimeterSimilarity(j) = abs(perimeterSimilarity(similarityIndex) - perimeterSimilarity(j));
+            circularitySimilarity(j) = abs(circularitySimilarity(similarityIndex) - circularitySimilarity(j));
+            sharpnessSimilarity(j) = abs(sharpnessSimilarity(similarityIndex) - sharpnessSimilarity(j));
+        end
+        
+        stats.areaSimilarity = areaSimilarity.';
+        stats.perimeterSimilarity = perimeterSimilarity.';
+        stats.circularitySimilarity = circularitySimilarity.';
+        stats.sharpnessSimilarity = sharpnessSimilarity.';
+        
+        statsArea = sortrows(stats,'areaSimilarity','ascend');
+        statsPerimeter = sortrows(stats,'perimeterSimilarity','ascend');
+        statsCircularity = sortrows(stats,'circularitySimilarity','ascend');
+        statsSharpness = sortrows(stats,'sharpnessSimilarity','ascend');
+        
+        
+        centroidsArea = cat(1, statsArea.Centroid);
+        centroidsPerimeter = cat(1, statsPerimeter.Centroid);
+        centroidsCircularity = cat(1, statsCircularity.Centroid);
+        centroidsSharpness = cat(1, statsSharpness.Centroid);
+            
+        maxrad = max(diameters)/2;
+
+        figure; subplot(2,num,1)
+        set(gcf, 'units','normalized','outerposition',[0 0 1 1]);
+        for i = 1:num
+
+            % Get the x and y corner coordinates as integers
+            sp(1) = floor(centroidsArea(i,1)-maxrad-10); %xmin
+            sp(2) = floor(centroidsArea(i,2)-maxrad-10); %ymin
+            sp(3) = ceil(centroidsArea(i,1)+maxrad+10);   %xmax
+            sp(4) = ceil(centroidsArea(i,2)+maxrad+10);   %ymax
+            
+            [rows, columns, colors] = size(img);
+            
+            if sp(1) < 0
+                sp(1) = 1;
+            end
+            
+            if sp(2) < 0
+                sp(2) = 1;
+            end
+            
+            if sp(3) > columns
+                sp(3) = columns;
+            end
+            
+            if sp(4) > rows
+                sp(4) = rows;
+            end
+            
+            
+            
+            disp(sp(1));
+            disp(sp(2));
+            disp(sp(3));
+            disp(sp(4));
+
+            % Index into the original image to create the new image
+            MM = img(sp(2):sp(4), sp(1): sp(3),:);
+
+            subplot(2,num,i), subimage(MM)
+            axis off
+            title(strcat('Area Similarity', ': ',{' '}, int2str(statsArea.areaSimilarity(i))), 'FontSize', 12);
+
+        end
+           
     end
 end
 
